@@ -7,8 +7,6 @@ from torch.nn.modules.utils import _pair
 
 import lib.csrc.roi_align_layer._roi_align as _roi_align
 
-from apex import amp
-
 class _ROIAlign(Function):
     @staticmethod
     def forward(ctx, input, roi, output_size, spatial_scale, sampling_ratio):
@@ -54,7 +52,6 @@ class ROIAlign(nn.Module):
         self.spatial_scale = spatial_scale
         self.sampling_ratio = sampling_ratio
 
-    @amp.float_function
     def forward(self, input, rois):
         return roi_align_func(
             input, rois, self.output_size, self.spatial_scale, self.sampling_ratio

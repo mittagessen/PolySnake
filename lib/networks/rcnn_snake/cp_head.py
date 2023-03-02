@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torch
 
+from torch import autocast
+
 from lib.csrc.roi_align_layer.roi_align import ROIAlign
 from lib.utils.rcnn_snake import rcnn_snake_config, rcnn_snake_utils
 from lib.csrc.extreme_utils import _ext
@@ -53,7 +55,8 @@ class ComponentDetection(nn.Module):
                             xs + wh[..., 0:1] / 2,
                             ys + wh[..., 1:2] / 2], dim=2)
         rois = rcnn_snake_utils.box_to_roi(bboxes, batch['act_01'].byte())
-        roi = self.pooler(cnn_feature, rois)
+        with autocast(enabled=False):
+            roi = self.pooler(cnn_feature, rois)
         return roi
 
     def nms_class_box(self, box, score, cls, cls_num):
@@ -115,8 +118,8 @@ class ComponentDetection(nn.Module):
         ind = ind.to(cnn_feature.device)
         abox = detection[:, :4]
         roi = torch.cat([ind[:, None], abox], dim=1)
-
-        roi = self.pooler(cnn_feature, roi)
+        with autocast(enabled=False):
+            roi = self.pooler(cnn_feature, roi)
         output.update({'detection': detection, 'roi_ind': ind})
 
         return roi
